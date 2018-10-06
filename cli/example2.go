@@ -1,6 +1,6 @@
 package main
 
-import "flag"
+import flag "github.com/spf13/pflag"
 import "fmt"
 import "strconv"
 
@@ -19,7 +19,7 @@ func main() {
 	var email string
 	flag.StringVar(&email, "email", "lyhopq@gmail.com", "user's email")
 	var pop percentage
-	flag.Var(&pop, "pop", "popularity")
+	//flag.Var(&pop, "pop", "popularity")
 	flag.Parse()
 	others := flag.Args()
 	fmt.Println("name:", *namePtr)
