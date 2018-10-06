@@ -1,23 +1,11 @@
-/*=================================================================
-
-Program name:
-	selpg (SELect PaGes)
-
-Purpose:
-	Sometimes one needs to extract only a specified range of
-pages from an input text file. This program allows the user to do
-that.
-
-Author: sefaice
-
-===================================================================*/
-
 package main
 
 /*================================= includes ======================*/
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 
 	flag "github.com/spf13/pflag"
@@ -29,10 +17,9 @@ type selpg_args struct {
 	start_page  int
 	end_page    int
 	in_filename string
-	page_len    int /* default value, can be overriden by "-l number" on command line */
-	page_type   int /* 'l' for lines-delimited, 'f' for form-feed-delimited */
-	/* default is 'l' */
-	print_dest string
+	page_len    int  /* default value, can be overriden by "-l number" on command line */
+	page_type   bool /* 'l' for lines-delimited, 'f' for form-feed-delimited default is 'l' */
+	print_dest  string
 }
 
 /*================================= globals =======================*/
@@ -49,7 +36,7 @@ func main() {
 	flag.IntVarP(&sa.start_page, "s", "s", -1, "start page")
 	flag.IntVarP(&sa.end_page, "e", "e", -1, "end page")
 	flag.IntVarP(&sa.page_len, "l", "l", 72, "page length")
-	//flag.BoolVarP(&sa.page_type, "f", false, "page type")
+	flag.BoolVarP(&sa.page_type, "f", "f", false, "page type")
 	flag.StringVarP(&sa.print_dest, "d", "d", "", "print destination")
 
 	// 改变默认的 Usage
@@ -58,7 +45,7 @@ func main() {
 	flag.Parse()
 
 	process_args()
-	//process_input()
+	process_input()
 }
 
 /*================================= process_args() ================*/
@@ -110,9 +97,62 @@ func process_args() {
 		}
 
 	}
+
 }
 
 /*================================= process_input() ===============*/
+
+func process_input() {
+
+	line_ctr := 0
+	page_ctr := 1
+
+	if flag.NArg() == 1 {
+		/* read from file input */
+		fin, err := os.Open(sa.in_filename)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: could not open input file \"%s\"\n", progname, sa.in_filename)
+			flag.Usage()
+			os.Exit(7)
+		}
+
+		//defer calls when this func returns
+		defer fin.Close()
+
+		br := bufio.NewReader(fin)
+
+		file_end := false
+
+		for page_ctr = sa.start_page; page_ctr <= sa.end_page && file_end == false; page_ctr++ {
+			for line_ctr = 0; line_ctr < sa.page_len && file_end == false; line_ctr++ {
+				a, _, c := br.ReadLine()
+				if c == io.EOF {
+					file_end = true
+				}
+				fmt.Println(string(a))
+			}
+		}
+	} else {
+		/* read from commandline */
+		var str string
+
+		for page_ctr = sa.start_page; page_ctr <= sa.end_page; page_ctr++ {
+			for line_ctr = 0; line_ctr < sa.page_len; line_ctr++ {
+				fmt.Scanln(&str)
+				fmt.Println(str)
+			}
+		}
+	}
+
+	/* end main loop */
+
+	if page_ctr < sa.start_page {
+		fmt.Fprintf(os.Stderr, "%s: start_page (%d) greater than total pages (%d), no output written\n", progname, sa.start_page, page_ctr)
+	} else if page_ctr < sa.end_page {
+		fmt.Fprintf(os.Stderr, "%s: end_page (%d) greater than total pages (%d), less output than expected\n", progname, sa.end_page, page_ctr)
+	}
+
+}
 
 /*================================= usage() =======================*/
 
