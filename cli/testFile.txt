@@ -18,3 +18,4 @@ LINE17: We actually enjoy these moments the most, where silence and spaces are a
 LINE18: We liked to start these pieces by playing live, the two of us plus our collaborator Mike Georgiades picking up instruments and playing together. 
 LINE19: By the time we were a few months in, we could channel the Ancient Greeks through our badly-tuned ancient instruments!
 LINE20: When working with a big open-world game like this, is it important to give different regions distinctive musical textures? What kinds of things did you want the music to reflect?
+LINE21: 123333
