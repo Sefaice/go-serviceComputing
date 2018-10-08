@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 
 	flag "github.com/spf13/pflag"
 )
@@ -107,6 +108,45 @@ func process_input() {
 	line_ctr := 0
 	page_ctr := 1
 
+	//selpg内容通过管道输入给 grep, grep从中搜出带有keyword文件的内容,copy from blog
+	fout := os.Stdout
+	if sa.print_dest != "" {
+		cmd := exec.Command("grep", "-nf", "keyword")
+		inpipe, err := cmd.StdinPipe()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(8)
+		}
+		defer inpipe.Close()
+		cmd.Stdout = fout
+		cmd.Start()
+	}
+
+	/**another code of -d with pipe, copy from github
+	cmd_grep := exec.Command("./" + sa.print_dest)
+	stdin_grep, grep_error := cmd_grep.StdinPipe()
+	if grep_error != nil {
+		fmt.Println("Error happened about standard input pipe ", grep_error)
+		os.Exit(30)
+	}
+	writer := stdin_grep
+	if grep_error := cmd_grep.Start(); grep_error != nil {
+		fmt.Println("Error happened in execution ", grep_error)
+		os.Exit(30)
+	}
+	if sa.page == true { //-d type
+		process_input_f_d(reader, writer, args, &page_ctr)
+	} else { //-l type
+		process_input_l_d(reader, writer, sa, &page_ctr, &line_ctr)
+	}
+	stdin_grep.Close()
+	//make sure all the infor in the buffer could be read
+	if err := cmd_grep.Wait(); err != nil {
+		fmt.Println("Error happened in Wait process")
+		os.Exit(30)
+	}
+	*/
+
 	if flag.NArg() == 1 {
 		/* read from file input */
 		fin, err := os.Open(sa.in_filename)
@@ -115,31 +155,50 @@ func process_input() {
 			flag.Usage()
 			os.Exit(7)
 		}
-
 		//defer calls when this func returns
 		defer fin.Close()
 
-		br := bufio.NewReader(fin)
+		if sa.page_type == false {
+			//read by line
+			br := bufio.NewReader(fin)
 
-		file_end := false
+			file_end := false
 
-		for page_ctr = sa.start_page; page_ctr <= sa.end_page && file_end == false; page_ctr++ {
-			for line_ctr = 0; line_ctr < sa.page_len && file_end == false; line_ctr++ {
-				a, _, c := br.ReadLine()
-				if c == io.EOF {
-					file_end = true
+			for page_ctr = sa.start_page; page_ctr <= sa.end_page && file_end == false; page_ctr++ {
+				for line_ctr = 0; line_ctr < sa.page_len && file_end == false; line_ctr++ {
+					a, _, c := br.ReadLine()
+					if c == io.EOF {
+						file_end = true
+					}
+					fmt.Println(string(a))
 				}
-				fmt.Println(string(a))
+			}
+		} else {
+			//read by char and stop a page when '\f'
+			//readString can split string by the param char you input
+			br := bufio.NewReader(fin)
+			file_end := false
+
+			for page_ctr = sa.start_page; page_ctr <= sa.end_page && file_end == false; page_ctr++ {
+				for !file_end {
+					line, _ := br.ReadString('\f')
+					if line == "" {
+						file_end = true
+						break
+					}
+					fmt.Println(line)
+				}
 			}
 		}
 	} else {
 		/* read from commandline */
-		var str string
+		reader := bufio.NewReader(os.Stdin)
 
 		for page_ctr = sa.start_page; page_ctr <= sa.end_page; page_ctr++ {
 			for line_ctr = 0; line_ctr < sa.page_len; line_ctr++ {
-				fmt.Scanln(&str)
-				fmt.Println(str)
+				//fmt.Scanln(&str) cannot read space in a line, so use below instead
+				str, _, _ := reader.ReadLine()
+				fmt.Println(string(str))
 			}
 		}
 	}
