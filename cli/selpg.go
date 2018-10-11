@@ -134,11 +134,15 @@ func process_input() {
 		fmt.Println("Error happened in execution ", grep_error)
 		os.Exit(30)
 	}
+
+	//write into pipe when reading from input
 	if sa.page == true { //-d type
 		process_input_f_d(reader, writer, args, &page_ctr)
 	} else { //-l type
 		process_input_l_d(reader, writer, sa, &page_ctr, &line_ctr)
 	}
+
+	//close the pipe when reading ends
 	stdin_grep.Close()
 	//make sure all the infor in the buffer could be read
 	if err := cmd_grep.Wait(); err != nil {
@@ -161,13 +165,13 @@ func process_input() {
 		if sa.page_type == false {
 			//read by line
 			br := bufio.NewReader(fin)
-
 			file_end := false
 
 			for page_ctr = sa.start_page; page_ctr <= sa.end_page && file_end == false; page_ctr++ {
 				for line_ctr = 0; line_ctr < sa.page_len && file_end == false; line_ctr++ {
 					a, _, c := br.ReadLine()
 					if c == io.EOF {
+						//read the end of file without reach the line or page number limit, return
 						file_end = true
 					}
 					fmt.Println(string(a))
