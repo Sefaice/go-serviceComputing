@@ -45,7 +45,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-其中，由于前端发来的POST数据设定了application/json格式，所以要先解析json字符串，golang有自带方法，返回json时先把数据放在map对象中，然后转换为json数据发送即可。
+其中，由于前端发来的POST数据设定了application/json格式，所以要先解析json字符串，golang有自带方法，返回json时先把数据放在map对象中，然后转换为json数据发送即，为了体现和服务器交互的作用，我用了一个全局变量serverId记录提交次数，每次提交后都加一返回给前端，可见最后测试图。
 
 最后一个路由是对/unkown解析，如果老师要求的意思是对非法路由统一处理的话，需要手动补充DefaultServeMux。
 
