@@ -43,8 +43,8 @@ func main() {
 	http.Handle("/", http.FileServer(http.Dir("./assets")))
 	// handle ajax submit requests
 	http.HandleFunc("/submit", submitHandler)
-	//
-	http.HandleFunc("/unkown", func(w http.ResponseWriter, r *http.Request) {
+	// i dont know if have to handle all invalid routes
+ 	http.HandleFunc("/unkown", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusServiceUnavailable), http.StatusServiceUnavailable)
 		//w.Write([]byte("Still developing"))
 	})
