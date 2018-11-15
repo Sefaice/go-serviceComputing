@@ -54,10 +54,11 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 ### 结果
 
 静态文件：
-![img1](img1.PNG)
+![img1](img1.png)
 
 ajax表单交互：
-![img2](img2.PNG)
+![img2](img2.png)
+![img3](img3.png)
 
 非法处理：
-![img3](img3.PNG)
+![img4](img4.png)
