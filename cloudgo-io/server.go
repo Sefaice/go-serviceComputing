@@ -1,34 +1,54 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 )
 
-func sayhelloName(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()       //解析参数，默认是不会解析的
-	fmt.Println(r.Form) //这些信息是输出到服务器端的打印信息
-	fmt.Println("path", r.URL.Path)
-	fmt.Println("scheme", r.URL.Scheme)
-	fmt.Println(r.Form["url_long"])
-	for k, v := range r.Form {
-		fmt.Println("key:", k)
-		fmt.Println("val:", strings.Join(v, ""))
-	}
-	fmt.Fprintf(w, "Hello astaxie!") //这个写入到w的是输出到客户端的
-}
+var serverId int
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()       //解析参数，默认是不会解析的
-	fmt.Println(r.Form) //这些信息是输出到服务器端的打印信息
-	fmt.Println("123")
+func submitHandler(w http.ResponseWriter, r *http.Request) {
+	// 解析参数，默认是不会解析的
+	r.ParseForm()
+	if r.Method == "POST" {
+		var user map[string]interface{}
+		body, err := ioutil.ReadAll(r.Body)
+		if err == nil {
+			serverId += 1
+			json.Unmarshal(body, &user)
+			fmt.Println("id:", user["id"])
+			fmt.Println("email:", user["email"])
+			fmt.Println("tel:", user["tel"])
+			fmt.Println("serverId:", serverId)
+
+			// response json
+			resData := map[string]int{"serverId": serverId}
+			resJson, err := json.Marshal(resData)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(resJson)
+		}
+	}
 }
 
 func main() {
-	http.HandleFunc("/", indexHandler)       //设置访问的路由
-	err := http.ListenAndServe(":8000", nil) //设置监听的端口
+	serverId = 0
+	// handle static files
+	http.Handle("/", http.FileServer(http.Dir("./assets")))
+	// handle ajax submit requests
+	http.HandleFunc("/submit", submitHandler)
+	//
+	http.HandleFunc("/unkown", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, http.StatusText(http.StatusServiceUnavailable), http.StatusServiceUnavailable)
+		//w.Write([]byte("Still developing"))
+	})
+	err := http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
