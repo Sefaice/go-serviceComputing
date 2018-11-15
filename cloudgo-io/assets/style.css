@@ -1,0 +1,14 @@
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+  
+.sf, .jf{
+    width: 200px;
+    height: 50px;
+    display: block;
+    margin: auto;
+    margin-top: 50px;
+}
